@@ -6,14 +6,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 from backend.config import settings
 from backend.core.security import create_access_token
 from backend.dependencies import DBSessionDep, get_current_user
 from backend.models.user import User
-from backend.schemas.auth import Token
-from backend.schemas.user import UserCreate, UserResponse
+from backend.schemas.auth import RegisterRequest, Token
+from backend.schemas.user import UserResponse
 
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -21,13 +20,13 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @auth_router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(
-    user_data: UserCreate,
+    user_data: RegisterRequest,
     session: DBSessionDep,
 ) -> User:
     """Register a new user.
 
     Args:
-        user_data: User creation data including email, password, name, and role
+        user_data: Registration data including email, password, and name
         session: Database session
 
     Returns:
@@ -47,9 +46,14 @@ async def register(
             detail="Email already registered"
         )
 
-    # Create new user
-    user = User.model_validate(user_data)
-    user.set_password(user_data.password)
+    # Create new user with default role
+    from backend.core.security import get_password_hash
+    user = User(
+        email=user_data.email,
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+        password_hash=get_password_hash(user_data.password),
+    )
 
     session.add(user)
     await session.commit()
@@ -122,9 +126,7 @@ async def get_current_user_info(
     Returns:
         UserResponse: Current user object
     """
-    # Note: get_current_user currently returns SQLModel | None
-    # This will be properly typed after we update dependencies
-    return current_user  # type: ignore
+    return current_user
 
 
 @auth_router.post("/logout")

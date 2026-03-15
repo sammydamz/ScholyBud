@@ -22,15 +22,9 @@ async def init_db() -> None:
             await init_db()
     """
     # Import all models to ensure they are registered with SQLModel.metadata
-    from backend.models.assessment import Assessment
-    from backend.models.attendance import AttendanceRecord
-    from backend.models.class_ import Class
-    from backend.models.fee import FeePayment, FeeStructure
-    from backend.models.grade import Grade
-    from backend.models.school import School
-    from backend.models.student import Student
-    from backend.models.subject import Subject
-    from backend.models.user import User
+    from backend.models.school import School  # noqa: F401
+    from backend.models.user import User  # noqa: F401
+    from backend.models.student import Student, Class  # noqa: F401
 
     # Create all tables using run_sync for async engine
     # This is idempotent - safe to run multiple times
