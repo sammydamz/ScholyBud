@@ -13,8 +13,28 @@ import IconifyIcon from '@/components/client-wrapper/IconifyIcon';
 import PageMeta from '@/components/PageMeta';
 import { LuMail, LuSmartphone } from 'react-icons/lu';
 import { Link } from 'react-router';
+import { useState, FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../lib/hooks/useAuth';
 
 const Index = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+  });
+  const { login, isLoading, error } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      await login(formData);
+      navigate('/dashboard');
+    } catch (err) {
+      // Error is handled by the useAuth hook
+      console.error('Login failed:', err);
+    }
+  };
   return (
     <>
       <PageMeta title="Login" />
@@ -113,7 +133,7 @@ const Index = () => {
                     role="tabpanel"
                     aria-labelledby="tabs-with-underline-item-1"
                   >
-                    <form action="/index" className="text-left w-full mt-10">
+                    <form onSubmit={handleSubmit} className="text-left w-full mt-10">
                       <div className="mb-4 ">
                         <label
                           htmlFor="Username"
@@ -126,6 +146,9 @@ const Index = () => {
                           id="Username"
                           className="form-input"
                           placeholder="Enter Username or email"
+                          value={formData.username}
+                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                          required
                         />
                       </div>
 
@@ -143,10 +166,13 @@ const Index = () => {
                           Password
                         </label>
                         <input
-                          type="text"
+                          type="password"
                           id="Password"
                           className="form-input"
                           placeholder="Enter Password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          required
                         />
                       </div>
 
@@ -160,9 +186,19 @@ const Index = () => {
                         </label>
                       </div>
 
+                      {error && (
+                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                          {error instanceof Error ? error.message : 'Login failed. Please try again.'}
+                        </div>
+                      )}
+
                       <div className="mt-10 text-center">
-                        <button type="button" className="btn bg-primary text-white w-full">
-                          Sign In
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          className="btn bg-primary text-white w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isLoading ? 'Signing in...' : 'Sign In'}
                         </button>
                       </div>
 
@@ -211,7 +247,7 @@ const Index = () => {
                     role="tabpanel"
                     aria-labelledby="tabs-with-underline-item-2"
                   >
-                    <form action="/index" className="text-left w-full mt-10">
+                    <form onSubmit={handleSubmit} className="text-left w-full mt-10">
                       <div className="mb-4">
                         <label
                           htmlFor="Phone Number"
@@ -224,6 +260,9 @@ const Index = () => {
                           id="Phone Number"
                           className="form-input"
                           placeholder="Enter Phone"
+                          value={formData.username}
+                          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                          required
                         />
                       </div>
 
@@ -241,10 +280,13 @@ const Index = () => {
                           Password
                         </label>
                         <input
-                          type="text"
+                          type="password"
                           id="Password"
                           className="form-input"
                           placeholder="Enter Password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          required
                         />
                       </div>
 
@@ -258,9 +300,19 @@ const Index = () => {
                         </label>
                       </div>
 
+                      {error && (
+                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                          {error instanceof Error ? error.message : 'Login failed. Please try again.'}
+                        </div>
+                      )}
+
                       <div className="mt-10 text-center">
-                        <button type="button" className="btn bg-primary text-white w-full">
-                          Sign In
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          className="btn bg-primary text-white w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isLoading ? 'Signing in...' : 'Sign In'}
                         </button>
                       </div>
 
