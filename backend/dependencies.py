@@ -1,15 +1,17 @@
 """Common dependencies for FastAPI routes."""
 
-from typing import Annotated
-from urllib.parse import urlparse
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from backend.config import settings
+
+if TYPE_CHECKING:
+    from backend.models.user import User
 
 # Database engine
 engine = create_async_engine(
@@ -57,7 +59,7 @@ async def get_current_user(
     request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
     session: DBSessionDep,
-) -> SQLModel | None:
+) -> "User":
     """Get current authenticated user from JWT token.
 
     This dependency extracts the JWT token from the Authorization header,
@@ -73,14 +75,9 @@ async def get_current_user(
 
     Raises:
         HTTPException: If token is invalid or user not found
-
-    Note:
-        This is a placeholder that will be fully implemented in Task 3.
-        It imports from core.security and models.user once created.
     """
-    # TODO: Implement in Task 3
-    # from core.security import decode_token
-    # from models.user import User
+    from backend.models.user import User
+    from backend.core.security import decode_token
 
     if credentials is None:
         raise HTTPException(
@@ -89,26 +86,36 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # TODO: Decode token and get user from database
-    # token = credentials.credentials
-    # payload = decode_token(token)
-    # user_id = payload.get("sub")
-    # statement = select(User).where(User.id == user_id)
-    # result = await session.execute(statement)
-    # user = result.scalar_one_or_none()
+    token = credentials.credentials
+    payload = decode_token(token)
 
-    # if user is None:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #         detail="User not found",
-    #     )
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    # return user
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="User authentication not yet implemented - see Task 3"
-    )
+    statement = select(User).where(User.id == user_id)
+    result = await session.exec(statement)
+    user = result.one_or_none()
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user
 
 
 # Type alias for current user dependency
@@ -155,9 +162,9 @@ async def get_school_from_subdomain(request: Request, session: DBSessionDep) -> 
 
     if len(parts) < 2 or host in ("localhost", "127", "0"):
         # For localhost or IP addresses, use a default school
-        subdomain = "default"
+        subdomain = "default"  # noqa: F841
     else:
-        subdomain = parts[0]
+        subdomain = parts[0]  # noqa: F841
 
     # TODO: Query school from database
     # statement = select(School).where(School.subdomain == subdomain)

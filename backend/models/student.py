@@ -2,8 +2,8 @@ from datetime import datetime, date, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, SQLModel, Relationship
-from typing_extensions import Annotated, Literal
+from sqlmodel import Field, SQLModel
+from typing_extensions import Annotated
 
 
 class Gender:
@@ -50,16 +50,14 @@ class Student(SQLModel, table=True):
     last_name: Annotated[str, Field(max_length=100)]
     other_names: Optional[str] = Field(default=None, max_length=100)
     date_of_birth: date
-    gender: Literal["male", "female", "other"]
+    gender: str = Field(max_length=10)
     guardian_name: Annotated[str, Field(max_length=200)]
     guardian_phone: Annotated[str, Field(max_length=20)]
     guardian_email: Optional[str] = Field(default=None, max_length=255)
     guardian_relationship: Annotated[str, Field(max_length=50)]
     address: Annotated[str, Field(max_length=500)]
     class_id: Optional[UUID] = Field(default=None, foreign_key="classes.id")
-    status: Literal["active", "graduated", "withdrawn", "transferred", "suspended"] = Field(
-        default="active"
-    )
+    status: str = Field(default="active", max_length=20)
     photo_url: Optional[str] = Field(default=None, max_length=500)
     enrollment_date: date
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

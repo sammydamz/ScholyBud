@@ -3,7 +3,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
-from typing_extensions import Annotated, Literal
+from typing_extensions import Annotated
 
 from backend.core.security import get_password_hash, verify_password
 
@@ -23,7 +23,7 @@ class User(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     email: Annotated[str, Field(max_length=255, unique=True, index=True)]
     password_hash: Annotated[str, Field(max_length=255)]
-    role: Literal["super_admin", "school_admin", "teacher"] = Field(default="teacher")
+    role: str = Field(default="teacher", max_length=50)
     school_id: Optional[UUID] = Field(default=None, foreign_key="schools.id")
     first_name: Annotated[str, Field(max_length=100)]
     last_name: Annotated[str, Field(max_length=100)]

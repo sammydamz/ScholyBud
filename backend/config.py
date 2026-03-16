@@ -19,11 +19,11 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = Field(
-        default="postgresql+pg8000://postgres:postgres@localhost:5432/scholybud",
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/scholybud",
         description="Database connection URL for production"
     )
     test_database_url: str = Field(
-        default="postgresql+pg8000://postgres:postgres@localhost:5432/scholybud_test",
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/scholybud_test",
         description="Database connection URL for testing"
     )
 
